@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console-market
+  labels:
+    run: console-market
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      run: console-market
+  template:
+    metadata:
+      labels:
+        run: console-market
+    spec:
+      containers:
+      - image: registry.cn-shenzhen.aliyuncs.com/salex/console-market:2023-10-31-22-34
+        name: console-market # 容器名称
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: console-market
+spec:
+  ports:
+  - port: 80 #服务端口
+    protocol: TCP
+    targetPort: 80 #应用端口
+  selector:
+    run: console-market
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: console-market-ingress
+spec:
+  rules:
+  - host: console.tuoyunai.com
+    http:
+      paths:
+      # 老版本服务。
+      - path: /market
+        backend:
+          service: 
+            name: console-market
+            port:
+              number: 80
+        pathType: Prefix
